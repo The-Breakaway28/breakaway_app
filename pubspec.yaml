@@ -1,0 +1,35 @@
+name: breakaway_app
+description: "The Breakaway — luxury cycling expedition platform (Breakaway OS)"
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+
+  # Typography — brand font is Inter
+  google_fonts: ^6.2.1
+
+  # Networking — will back the Auth API integration (next step)
+  dio: ^5.4.3+1
+
+  # Secure storage for the JWT issued by the backend on login
+  flutter_secure_storage: ^9.2.2
+
+  # Lightweight state management
+  flutter_riverpod: ^2.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  # assets:
+  #   - assets/images/
