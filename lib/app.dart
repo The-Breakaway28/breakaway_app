@@ -13,6 +13,7 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'The Breakaway',
+      debugShowCheckedModeBanner: false, // Убирает баннер DEBUG
       theme: AppTheme.dark,
       initialRoute: '/login',
       routes: {
