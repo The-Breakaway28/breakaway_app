@@ -46,15 +46,9 @@ class DriverDashboardScreen extends ConsumerWidget {
                 children: [
                   const Icon(Icons.directions_car, size: 80, color: AppColors.neon),
                   const SizedBox(height: 24),
-                  Text(
-                    name,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
+                  Text(name, style: Theme.of(context).textTheme.headlineMedium),
                   const SizedBox(height: 8),
-                  Text(
-                    'Тип: $type',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
+                  Text('Тип: $type', style: Theme.of(context).textTheme.bodyLarge),
                   const SizedBox(height: 32),
                   Card(
                     color: AppColors.emeraldSurface,
@@ -62,15 +56,15 @@ class DriverDashboardScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          _buildLevelRow('⛽ Топливо', fuelLevel),
-                          const SizedBox(height: 12),
-                          _buildLevelRow('💧 Вода', waterLevel),
-                          const SizedBox(height: 12),
-                          _buildLevelRow('🔥 Пропан', propaneLevel),
-                          const SizedBox(height: 12),
-                          _buildLevelRow('🔋 Батарея', batteryCharge),
-                          const SizedBox(height: 12),
-                          _buildLevelRow('☀️ Солнечные панели', solarPower),
+                          _buildProgressBar('⛽ Топливо', fuelLevel),
+                          const SizedBox(height: 16),
+                          _buildProgressBar('💧 Вода', waterLevel),
+                          const SizedBox(height: 16),
+                          _buildProgressBar('🔥 Пропан', propaneLevel),
+                          const SizedBox(height: 16),
+                          _buildProgressBar('🔋 Батарея', batteryCharge),
+                          const SizedBox(height: 16),
+                          _buildProgressBar('☀️ Солнечные панели', solarPower),
                         ],
                       ),
                     ),
@@ -93,14 +87,46 @@ class DriverDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLevelRow(String label, double? value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildProgressBar(String label, double? value) {
+    final percentage = value ?? 0;
+    final isCritical = percentage < 20;
+    final isWarning = percentage >= 20 && percentage < 40;
+
+    Color barColor;
+    if (isCritical) {
+      barColor = AppColors.error;
+    } else if (isWarning) {
+      barColor = Colors.orange;
+    } else {
+      barColor = AppColors.neon;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 16)),
-        Text(
-          value != null ? '${value.toStringAsFixed(0)}%' : '—',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+            Text(
+              value != null ? '${percentage.toStringAsFixed(0)}%' : '—',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: value != null ? barColor : AppColors.textMuted,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: value != null ? percentage / 100 : 0,
+            backgroundColor: AppColors.emeraldLine,
+            color: barColor,
+            minHeight: 8,
+          ),
         ),
       ],
     );
