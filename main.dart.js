@@ -45608,7 +45608,7 @@ return A.P($async$m2,r)},
 vY(a,b){return this.auA(a,b)},
 auA(a,b){var s=0,r=A.Q(t.a),q,p=2,o=[],n=this,m,l,k,j,i,h,g,f,e,d
 var $async$vY=A.R(function(c,a0){if(c===1){o.push(a0)
-s=p}for(;;)switch(s){case 0:e=A.dx("http://178.104.120.91:3000/auth/login")
+s=p}for(;;)switch(s){case 0:e=A.dx("https://breakaway-api.duckdns.org/auth/login")
 p=4
 h=t.N
 g=A.aB(["Content-Type","application/json"],h,h)
@@ -45773,7 +45773,7 @@ A.n3.prototype={
 wI(){var s=0,r=A.Q(t.j),q,p=this,o
 var $async$wI=A.R(function(a,b){if(a===1)return A.N(b,r)
 for(;;)switch(s){case 0:s=3
-return A.L(p.a.eh(0,"http://178.104.120.91:3000/vehicles"),$async$wI)
+return A.L(p.a.eh(0,"https://breakaway-api.duckdns.org/vehicles"),$async$wI)
 case 3:o=b
 if(o.b!==200)throw A.e(A.cv("Failed to load vehicles"))
 q=t.j.a(B.bs.oz(0,A.y0(A.xQ(o.e)).ea(0,o.w),null))
@@ -45914,7 +45914,7 @@ A.n4.prototype={
 wT(){var s=0,r=A.Q(t.j),q,p=this,o
 var $async$wT=A.R(function(a,b){if(a===1)return A.N(b,r)
 for(;;)switch(s){case 0:s=3
-return A.L(p.a.eh(0,"http://178.104.120.91:3000/chef/riders-status"),$async$wT)
+return A.L(p.a.eh(0,"https://breakaway-api.duckdns.org/chef/riders-status"),$async$wT)
 case 3:o=b
 if(o.b!==200)throw A.e(A.cv("Failed to load riders status"))
 q=t.j.a(B.bs.oz(0,A.y0(A.xQ(o.e)).ea(0,o.w),null))
@@ -45982,7 +45982,7 @@ wX(a){return this.a1v(a)},
 a1v(a){var s=0,r=A.Q(t.a),q,p=this,o
 var $async$wX=A.R(function(b,c){if(b===1)return A.N(c,r)
 for(;;)switch(s){case 0:s=3
-return A.L(p.a.eh(0,"http://178.104.120.91:3000/vehicles/"+a),$async$wX)
+return A.L(p.a.eh(0,"https://breakaway-api.duckdns.org/vehicles/"+a),$async$wX)
 case 3:o=c
 if(o.b!==200)throw A.e(A.cv("Failed to load vehicle"))
 q=t.a.a(B.bs.oz(0,A.y0(A.xQ(o.e)).ea(0,o.w),null))
@@ -46062,7 +46062,7 @@ a1n(a,b){var s=0,r=A.Q(t.j),q,p,o
 var $async$wS=A.R(function(c,d){if(c===1)return A.N(d,r)
 for(;;)switch(s){case 0:p=t.N
 s=3
-return A.L(A.aEn(A.dx("http://178.104.120.91:3000/riders/"+a+"/telemetry"),A.aB(["Content-Type","application/json","Authorization","Bearer "+b],p,p)),$async$wS)
+return A.L(A.aEn(A.dx("https://breakaway-api.duckdns.org/riders/"+a+"/telemetry"),A.aB(["Content-Type","application/json","Authorization","Bearer "+b],p,p)),$async$wS)
 case 3:o=d
 p=o.b
 if(p===200){q=B.bs.oz(0,A.y0(A.xQ(o.e)).ea(0,o.w),null)
@@ -46076,7 +46076,7 @@ a16(a,b,c){var s=0,r=A.Q(t.a),q,p,o
 var $async$wM=A.R(function(d,e){if(d===1)return A.N(e,r)
 for(;;)switch(s){case 0:p=t.N
 s=3
-return A.L(A.aEn(A.dx("http://178.104.120.91:3000/weather/current?lat="+A.m(a)+"&lng="+A.m(b)),A.aB(["Content-Type","application/json","Authorization","Bearer "+c],p,p)),$async$wM)
+return A.L(A.aEn(A.dx("https://breakaway-api.duckdns.org/weather/current?lat="+A.m(a)+"&lng="+A.m(b)),A.aB(["Content-Type","application/json","Authorization","Bearer "+c],p,p)),$async$wM)
 case 3:o=e
 p=o.b
 if(p===200){q=B.bs.oz(0,A.y0(A.xQ(o.e)).ea(0,o.w),null)
