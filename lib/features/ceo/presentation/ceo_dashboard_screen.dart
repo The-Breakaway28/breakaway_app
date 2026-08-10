@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../../../core/providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../providers/all_vehicles_provider.dart';
@@ -17,7 +19,6 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
   Future<void> _refresh() async {
     setState(() => _isRefreshing = true);
     ref.invalidate(allVehiclesProvider);
-    // Ждём завершения обновления провайдера
     await Future.delayed(const Duration(milliseconds: 500));
     if (mounted) setState(() => _isRefreshing = false);
   }
@@ -33,10 +34,13 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            icon: _isRefreshing ? const SizedBox(
-              width: 20, height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.neon),
-            ) : const Icon(Icons.refresh),
+            icon: _isRefreshing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.neon),
+                  )
+                : const Icon(Icons.refresh),
             onPressed: _isRefreshing ? null : _refresh,
           ),
           IconButton(
@@ -50,81 +54,125 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
       ),
       body: vehiclesAsync.when(
         data: (vehicles) {
-          if (vehicles.isEmpty) {
-            return const Center(child: Text('Нет данных об автодомах'));
-          }
-          return ListView.builder(
-            itemCount: vehicles.length + 1,
-            padding: const EdgeInsets.all(16),
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return Card(
-                  color: AppColors.emeraldSurface,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('🌅 Утренний брифинг', style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 8),
-                        Text('Погода, ветер, рекомендации — здесь появится сводка перед стартом этапа.',
-                            style: Theme.of(context).textTheme.bodyMedium),
-                      ],
-                    ),
-                  ),
-                );
-              }
-
-              final vehicle = vehicles[index - 1];
-              final name = vehicle['name'] ?? '—';
-              final type = vehicle['type'] ?? '—';
-              final fuel = (vehicle['fuelLevel'] as num?)?.toDouble();
-              final water = (vehicle['waterLevel'] as num?)?.toDouble();
-              final propane = (vehicle['propaneLevel'] as num?)?.toDouble();
-              final battery = (vehicle['batteryCharge'] as num?)?.toDouble();
-              final gpsLat = (vehicle['gpsLat'] as num?)?.toDouble();
-              final gpsLng = (vehicle['gpsLng'] as num?)?.toDouble();
-
-              return Card(
-                color: AppColors.emeraldSurface,
-                margin: const EdgeInsets.only(bottom: 12),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(name, style: Theme.of(context).textTheme.titleMedium),
-                          Icon(Icons.directions_car, color: _getStatusColor(fuel, water)),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text('Тип: $type', style: Theme.of(context).textTheme.bodyMedium),
-                      const SizedBox(height: 8),
-                      if (fuel != null || water != null || propane != null || battery != null)
-                        Wrap(
-                          spacing: 16,
-                          runSpacing: 8,
-                          children: [
-                            if (fuel != null) _buildBadge('⛽', '${fuel.toStringAsFixed(0)}%'),
-                            if (water != null) _buildBadge('💧', '${water.toStringAsFixed(0)}%'),
-                            if (propane != null) _buildBadge('🔥', '${propane.toStringAsFixed(0)}%'),
-                            if (battery != null) _buildBadge('🔋', '${battery.toStringAsFixed(0)}%'),
-                          ],
-                        ),
-                      if (gpsLat != null && gpsLng != null) ...[
-                        const SizedBox(height: 8),
-                        Text('📍 ${gpsLat.toStringAsFixed(4)}, ${gpsLng.toStringAsFixed(4)}',
-                            style: Theme.of(context).textTheme.bodySmall),
-                      ],
-                    ],
-                  ),
+          // Собираем маркеры для автодомов с GPS
+          final markers = <Marker>[];
+          for (final v in vehicles) {
+            final lat = (v['gpsLat'] as num?)?.toDouble();
+            final lng = (v['gpsLng'] as num?)?.toDouble();
+            if (lat != null && lng != null) {
+              markers.add(
+                Marker(
+                  point: LatLng(lat, lng),
+                  width: 80,
+                  height: 80,
+                  child: const Icon(Icons.directions_car, color: AppColors.neon, size: 30),
                 ),
               );
-            },
+            }
+          }
+
+          return Column(
+            children: [
+              // Карта
+              SizedBox(
+                height: 250,
+                width: double.infinity,
+                child: FlutterMap(
+                  options: MapOptions(
+                    initialCenter: markers.isNotEmpty
+                        ? markers.first.point
+                        : const LatLng(45.0, 6.0),
+                    initialZoom: 11.0,
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.breakaway.app',
+                    ),
+                    if (markers.isNotEmpty) MarkerLayer(markers: markers),
+                  ],
+                ),
+              ),
+              // Список автодомов
+              Expanded(
+                child: ListView.builder(
+                  itemCount: vehicles.length + 1,
+                  padding: const EdgeInsets.all(16),
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return Card(
+                        color: AppColors.emeraldSurface,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('🌅 Утренний брифинг',
+                                  style: Theme.of(context).textTheme.titleMedium),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Погода, ветер, рекомендации — здесь появится сводка перед стартом этапа.',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    final vehicle = vehicles[index - 1];
+                    final name = vehicle['name'] ?? '—';
+                    final type = vehicle['type'] ?? '—';
+                    final fuel = (vehicle['fuelLevel'] as num?)?.toDouble();
+                    final water = (vehicle['waterLevel'] as num?)?.toDouble();
+                    final propane = (vehicle['propaneLevel'] as num?)?.toDouble();
+                    final battery = (vehicle['batteryCharge'] as num?)?.toDouble();
+                    final gpsLat = (vehicle['gpsLat'] as num?)?.toDouble();
+                    final gpsLng = (vehicle['gpsLng'] as num?)?.toDouble();
+
+                    return Card(
+                      color: AppColors.emeraldSurface,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(name, style: Theme.of(context).textTheme.titleMedium),
+                                Icon(Icons.directions_car, color: _getStatusColor(fuel, water)),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text('Тип: $type', style: Theme.of(context).textTheme.bodyMedium),
+                            const SizedBox(height: 8),
+                            if (fuel != null || water != null || propane != null || battery != null)
+                              Wrap(
+                                spacing: 16,
+                                runSpacing: 8,
+                                children: [
+                                  if (fuel != null) _buildBadge('⛽', '${fuel.toStringAsFixed(0)}%'),
+                                  if (water != null) _buildBadge('💧', '${water.toStringAsFixed(0)}%'),
+                                  if (propane != null) _buildBadge('🔥', '${propane.toStringAsFixed(0)}%'),
+                                  if (battery != null) _buildBadge('🔋', '${battery.toStringAsFixed(0)}%'),
+                                ],
+                              ),
+                            if (gpsLat != null && gpsLng != null) ...[
+                              const SizedBox(height: 8),
+                              Text('📍 ${gpsLat.toStringAsFixed(4)}, ${gpsLng.toStringAsFixed(4)}',
+                                  style: Theme.of(context).textTheme.bodySmall),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
