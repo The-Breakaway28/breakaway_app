@@ -4,7 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class AuthService {
-  static const String _baseUrl = 'http://178.104.120.91:3000';
+  static const String _baseUrl = 'https://breakaway-api.duckdns.org';
   static const String _tokenKey = 'auth_token';
   static const String _roleKey = 'user_role';
   final FlutterSecureStorage _storage = const FlutterSecureStorage();

@@ -12,7 +12,7 @@ final ceoServiceProvider = Provider<CeoService>((ref) {
 class CeoService {
   final ApiClient _apiClient;
   CeoService(this._apiClient);
-  static const String _baseUrl = 'http://178.104.120.91:3000';
+  static const String _baseUrl = 'https://breakaway-api.duckdns.org';
 
   Future<List<dynamic>> getAllVehicles() async {
     final response = await _apiClient.get('$_baseUrl/vehicles');

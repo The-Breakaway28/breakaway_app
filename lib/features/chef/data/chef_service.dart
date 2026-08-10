@@ -12,7 +12,7 @@ final chefServiceProvider = Provider<ChefService>((ref) {
 class ChefService {
   final ApiClient _apiClient;
   ChefService(this._apiClient);
-  static const String _baseUrl = 'http://178.104.120.91:3000';
+  static const String _baseUrl = 'https://breakaway-api.duckdns.org';
 
   Future<List<dynamic>> getRidersStatus() async {
     final response = await _apiClient.get('$_baseUrl/chef/riders-status');

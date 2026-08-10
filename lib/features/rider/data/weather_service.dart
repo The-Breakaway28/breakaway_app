@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class WeatherService {
-  static const String _baseUrl = 'http://178.104.120.91:3000';
+  static const String _baseUrl = 'https://breakaway-api.duckdns.org';
 
   Future<Map<String, dynamic>> getCurrentWeather(double lat, double lng, String token) async {
     final uri = Uri.parse('$_baseUrl/weather/current?lat=$lat&lng=$lng');
