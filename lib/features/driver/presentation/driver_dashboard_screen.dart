@@ -34,6 +34,8 @@ class DriverDashboardScreen extends ConsumerWidget {
             final fuelLevel = (vehicle['fuelLevel'] as num?)?.toDouble();
             final waterLevel = (vehicle['waterLevel'] as num?)?.toDouble();
             final propaneLevel = (vehicle['propaneLevel'] as num?)?.toDouble();
+            final batteryCharge = (vehicle['batteryCharge'] as num?)?.toDouble();
+            final solarPower = (vehicle['solarPower'] as num?)?.toDouble();
             final gpsLat = (vehicle['gpsLat'] as num?)?.toDouble();
             final gpsLng = (vehicle['gpsLng'] as num?)?.toDouble();
 
@@ -65,6 +67,10 @@ class DriverDashboardScreen extends ConsumerWidget {
                           _buildLevelRow('💧 Вода', waterLevel),
                           const SizedBox(height: 12),
                           _buildLevelRow('🔥 Пропан', propaneLevel),
+                          const SizedBox(height: 12),
+                          _buildLevelRow('🔋 Батарея', batteryCharge),
+                          const SizedBox(height: 12),
+                          _buildLevelRow('☀️ Солнечные панели', solarPower),
                         ],
                       ),
                     ),
