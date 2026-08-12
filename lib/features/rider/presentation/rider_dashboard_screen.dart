@@ -4,6 +4,7 @@ import '../../../core/providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../providers/weather_provider.dart';
 import '../providers/telemetry_provider.dart';
+import '../providers/media_provider.dart';
 
 class RiderDashboardScreen extends ConsumerWidget {
   const RiderDashboardScreen({super.key});
@@ -14,6 +15,7 @@ class RiderDashboardScreen extends ConsumerWidget {
     final weatherAsync = ref.watch(currentWeatherProvider(const (lat: 45.0, lng: 6.0)));
     const riderId = '4dad9c5c-f171-462b-8d4a-112eb3c49a83';
     final telemetryAsync = ref.watch(riderTelemetryProvider(riderId));
+    final mediaAsync = ref.watch(mediaClipsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -37,10 +39,7 @@ class RiderDashboardScreen extends ConsumerWidget {
             children: [
               const Icon(Icons.directions_bike, size: 80, color: AppColors.neon),
               const SizedBox(height: 24),
-              Text(
-                'Добро пожаловать, Райдер!',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
+              Text('Добро пожаловать, Райдер!', style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 32),
 
               // Погода
@@ -51,14 +50,11 @@ class RiderDashboardScreen extends ConsumerWidget {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        Text('🌡 ${weather['temperature']}°C, ${weather['description']}',
-                            style: Theme.of(context).textTheme.bodyLarge),
+                        Text('🌡 ${weather['temperature']}°C, ${weather['description']}', style: Theme.of(context).textTheme.bodyLarge),
                         const SizedBox(height: 8),
-                        Text('💨 Ветер: ${weather['windSpeed']} м/с',
-                            style: Theme.of(context).textTheme.bodyLarge),
+                        Text('💨 Ветер: ${weather['windSpeed']} м/с', style: Theme.of(context).textTheme.bodyLarge),
                         const SizedBox(height: 8),
-                        Text('💧 Влажность: ${weather['humidity']}%',
-                            style: Theme.of(context).textTheme.bodyLarge),
+                        Text('💧 Влажность: ${weather['humidity']}%', style: Theme.of(context).textTheme.bodyLarge),
                       ],
                     ),
                   ),
@@ -81,8 +77,7 @@ class RiderDashboardScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          if (last['metricName'] != null)
-                            Text('${last['metricName']}: ${last['metricValue']}'),
+                          if (last['metricName'] != null) Text('${last['metricName']}: ${last['metricValue']}'),
                           Text('Время: ${DateTime.parse(last['time']).toLocal()}'),
                         ],
                       ),
@@ -91,6 +86,30 @@ class RiderDashboardScreen extends ConsumerWidget {
                 },
                 loading: () => const CircularProgressIndicator(),
                 error: (e, _) => Text('Ошибка телеметрии: $e'),
+              ),
+              const SizedBox(height: 24),
+
+              // Мои видео
+              Text('Мои видео', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 12),
+              mediaAsync.when(
+                data: (clips) {
+                  if (clips.isEmpty) return const Text('Видео пока нет');
+                  return Column(
+                    children: clips.map((clip) {
+                      return Card(
+                        color: AppColors.emeraldSurface,
+                        child: ListTile(
+                          title: Text('Хайлайт ${clip['createdAt']}'),
+                          subtitle: Text(clip['result_url'] ?? ''),
+                          trailing: const Icon(Icons.play_circle, color: AppColors.neon),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                },
+                loading: () => const CircularProgressIndicator(),
+                error: (e, _) => Text('Ошибка видео: $e'),
               ),
               const SizedBox(height: 24),
 
@@ -112,18 +131,12 @@ class RiderDashboardScreen extends ConsumerWidget {
                         title: const Text('Отправить SOS?'),
                         content: const Text('Будет отправлен сигнал тревоги.'),
                         actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx),
-                            child: const Text('Отмена'),
-                          ),
+                          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Отмена')),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
                             onPressed: () {
                               Navigator.pop(ctx);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('SOS отправлен')),
-                              );
-                              // TODO: реальный вызов API SOS
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('SOS отправлен')));
                             },
                             child: const Text('SOS'),
                           ),
@@ -135,7 +148,6 @@ class RiderDashboardScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 24),
-
               ElevatedButton(
                 onPressed: () async {
                   await authService.logout();
