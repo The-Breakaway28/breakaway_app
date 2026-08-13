@@ -54,34 +54,18 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
       ),
       body: vehiclesAsync.when(
         data: (vehicles) {
-          // Собираем маркеры для автодомов с GPS
-          final markers = <Marker>[];
-          for (final v in vehicles) {
-            final lat = (v['gpsLat'] as num?)?.toDouble();
-            final lng = (v['gpsLng'] as num?)?.toDouble();
-            if (lat != null && lng != null) {
-              markers.add(
-                Marker(
-                  point: LatLng(lat, lng),
-                  width: 80,
-                  height: 80,
-                  child: const Icon(Icons.directions_car, color: AppColors.neon, size: 30),
-                ),
-              );
-            }
+          if (vehicles.isEmpty) {
+            return const Center(child: Text('Нет данных об автодомах'));
           }
-
           return Column(
             children: [
               // Карта
               SizedBox(
-                height: 250,
+                height: 220,
                 width: double.infinity,
                 child: FlutterMap(
                   options: MapOptions(
-                    initialCenter: markers.isNotEmpty
-                        ? markers.first.point
-                        : const LatLng(45.0, 6.0),
+                    initialCenter: const LatLng(45.0, 6.0),
                     initialZoom: 11.0,
                   ),
                   children: [
@@ -89,47 +73,22 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
                       urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                       userAgentPackageName: 'com.breakaway.app',
                     ),
-                    if (markers.isNotEmpty) MarkerLayer(markers: markers),
                   ],
                 ),
               ),
-              // Список автодомов
+              // Список автодомов с прогресс-барами
               Expanded(
                 child: ListView.builder(
-                  itemCount: vehicles.length + 1,
+                  itemCount: vehicles.length,
                   padding: const EdgeInsets.all(16),
                   itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return Card(
-                        color: AppColors.emeraldSurface,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('🌅 Утренний брифинг',
-                                  style: Theme.of(context).textTheme.titleMedium),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Погода, ветер, рекомендации — здесь появится сводка перед стартом этапа.',
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
-
-                    final vehicle = vehicles[index - 1];
+                    final vehicle = vehicles[index];
                     final name = vehicle['name'] ?? '—';
                     final type = vehicle['type'] ?? '—';
-                    final fuel = (vehicle['fuelLevel'] as num?)?.toDouble();
-                    final water = (vehicle['waterLevel'] as num?)?.toDouble();
-                    final propane = (vehicle['propaneLevel'] as num?)?.toDouble();
-                    final battery = (vehicle['batteryCharge'] as num?)?.toDouble();
-                    final gpsLat = (vehicle['gpsLat'] as num?)?.toDouble();
-                    final gpsLng = (vehicle['gpsLng'] as num?)?.toDouble();
+                    final fuel = (vehicle['fuelLevel'] as num?)?.toDouble() ?? 0;
+                    final water = (vehicle['waterLevel'] as num?)?.toDouble() ?? 0;
+                    final propane = (vehicle['propaneLevel'] as num?)?.toDouble() ?? 0;
+                    final battery = (vehicle['batteryCharge'] as num?)?.toDouble() ?? 0;
 
                     return Card(
                       color: AppColors.emeraldSurface,
@@ -143,28 +102,16 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(name, style: Theme.of(context).textTheme.titleMedium),
-                                Icon(Icons.directions_car, color: _getStatusColor(fuel, water)),
+                                Icon(Icons.directions_car, color: AppColors.neon),
                               ],
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 4),
                             Text('Тип: $type', style: Theme.of(context).textTheme.bodyMedium),
-                            const SizedBox(height: 8),
-                            if (fuel != null || water != null || propane != null || battery != null)
-                              Wrap(
-                                spacing: 16,
-                                runSpacing: 8,
-                                children: [
-                                  if (fuel != null) _buildBadge('⛽', '${fuel.toStringAsFixed(0)}%'),
-                                  if (water != null) _buildBadge('💧', '${water.toStringAsFixed(0)}%'),
-                                  if (propane != null) _buildBadge('🔥', '${propane.toStringAsFixed(0)}%'),
-                                  if (battery != null) _buildBadge('🔋', '${battery.toStringAsFixed(0)}%'),
-                                ],
-                              ),
-                            if (gpsLat != null && gpsLng != null) ...[
-                              const SizedBox(height: 8),
-                              Text('📍 ${gpsLat.toStringAsFixed(4)}, ${gpsLng.toStringAsFixed(4)}',
-                                  style: Theme.of(context).textTheme.bodySmall),
-                            ],
+                            const SizedBox(height: 12),
+                            _buildProgressBar('⛽ Топливо', fuel),
+                            _buildProgressBar('💧 Вода', water),
+                            _buildProgressBar('🔥 Пропан', propane),
+                            _buildProgressBar('🔋 Батарея', battery),
                           ],
                         ),
                       ),
@@ -181,20 +128,39 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
     );
   }
 
-  Widget _buildBadge(String emoji, String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.emeraldLine,
-        borderRadius: BorderRadius.circular(12),
+  Widget _buildProgressBar(String label, double value) {
+    Color color;
+    if (value > 50) {
+      color = AppColors.neon;
+    } else if (value > 20) {
+      color = Colors.orange;
+    } else {
+      color = AppColors.error;
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 14)),
+              Text('${value.toStringAsFixed(0)}%', style: const TextStyle(fontSize: 14)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: value / 100,
+              backgroundColor: Colors.grey[800],
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+              minHeight: 10,
+            ),
+          ),
+        ],
       ),
-      child: Text('$emoji $text', style: const TextStyle(fontSize: 12)),
     );
-  }
-
-  Color _getStatusColor(double? fuel, double? water) {
-    if ((fuel ?? 100) < 15 || (water ?? 100) < 20) return AppColors.error;
-    if ((fuel ?? 100) < 30 || (water ?? 100) < 40) return Colors.orange;
-    return AppColors.neon;
   }
 }
