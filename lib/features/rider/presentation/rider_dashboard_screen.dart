@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../providers/weather_provider.dart';
 import '../providers/telemetry_provider.dart';
 import '../providers/media_provider.dart';
+import '../../../core/widgets/empty_state.dart';
 
 class RiderDashboardScreen extends ConsumerWidget {
   const RiderDashboardScreen({super.key});
@@ -69,7 +70,7 @@ class RiderDashboardScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               telemetryAsync.when(
                 data: (telemetryList) {
-                  if (telemetryList.isEmpty) return const Text('Нет данных телеметрии');
+                  if (telemetryList.isEmpty) return const EmptyState(icon: Icons.monitor_heart_outlined, title: 'Нет телеметрии', subtitle: 'Данные появятся после первого этапа');
                   final last = telemetryList.first;
                   return Card(
                     color: AppColors.emeraldSurface,
@@ -94,7 +95,7 @@ class RiderDashboardScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               mediaAsync.when(
                 data: (clips) {
-                  if (clips.isEmpty) return const Text('Видео пока нет');
+                  if (clips.isEmpty) return const EmptyState(icon: Icons.video_library_outlined, title: 'Видео пока нет', subtitle: 'Ваши хайлайты появятся здесь после обработки');
                   return Column(
                     children: clips.map((clip) {
                       return Card(

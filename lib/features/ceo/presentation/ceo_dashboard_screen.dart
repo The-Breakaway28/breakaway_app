@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import '../../../core/providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../providers/all_vehicles_provider.dart';
+import '../../../core/widgets/empty_state.dart';
 
 class CEODashboardScreen extends ConsumerStatefulWidget {
   const CEODashboardScreen({super.key});
@@ -55,7 +56,11 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
       body: vehiclesAsync.when(
         data: (vehicles) {
           if (vehicles.isEmpty) {
-            return const Center(child: Text('Нет данных об автодомах'));
+            return const EmptyState(
+      icon: Icons.directions_car,
+      title: 'Нет автодомов',
+      subtitle: 'Когда появится ваш караван, вы увидите его здесь',
+    );
           }
           return Column(
             children: [

@@ -1,5 +1,4 @@
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../../features/auth/data/auth_service.dart';
 
 class ApiClient {
