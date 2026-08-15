@@ -5,7 +5,6 @@ import 'package:latlong2/latlong.dart';
 import '../../../core/providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../providers/all_vehicles_provider.dart';
-import '../../../core/widgets/empty_state.dart';
 
 class CEODashboardScreen extends ConsumerStatefulWidget {
   const CEODashboardScreen({super.key});
@@ -16,6 +15,9 @@ class CEODashboardScreen extends ConsumerStatefulWidget {
 
 class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
   bool _isRefreshing = false;
+  final MapController _mapController = MapController();
+  LatLng _currentCenter = const LatLng(45.0, 6.0);
+  double _currentZoom = 11.0;
 
   Future<void> _refresh() async {
     setState(() => _isRefreshing = true);
@@ -23,6 +25,10 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
     await Future.delayed(const Duration(milliseconds: 500));
     if (mounted) setState(() => _isRefreshing = false);
   }
+
+  void _zoomIn() => _mapController.move(_currentCenter, _currentZoom + 1);
+  void _zoomOut() => _mapController.move(_currentCenter, _currentZoom - 1);
+  void _locate() => _mapController.move(_currentCenter, 13);
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +54,7 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await authService.logout();
-              Navigator.pushReplacementNamed(context, '/login');
+              if (context.mounted) Navigator.pushReplacementNamed(context, '/login');
             },
           ),
         ],
@@ -56,27 +62,61 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
       body: vehiclesAsync.when(
         data: (vehicles) {
           if (vehicles.isEmpty) {
-            return const EmptyState(
-      icon: Icons.directions_car,
-      title: 'Нет автодомов',
-      subtitle: 'Когда появится ваш караван, вы увидите его здесь',
-    );
+            return const Center(child: Text('Нет данных об автодомах'));
           }
           return Column(
             children: [
-              // Карта
-              SizedBox(
-                height: 220,
-                width: double.infinity,
-                child: FlutterMap(
-                  options: MapOptions(
-                    initialCenter: const LatLng(45.0, 6.0),
-                    initialZoom: 11.0,
-                  ),
+              // Карта с кнопками
+              Expanded(
+                child: Stack(
                   children: [
-                    TileLayer(
-                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.breakaway.app',
+                    FlutterMap(
+                      mapController: _mapController,
+                      options: MapOptions(
+                        initialCenter: _currentCenter,
+                        initialZoom: _currentZoom,
+                        onPositionChanged: (position, hasGesture) {
+                          _currentCenter = position.center;
+                          _currentZoom = position.zoom;
+                        },
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.breakaway.app',
+                        ),
+                      ],
+                    ),
+                    Positioned(
+                      right: 12,
+                      bottom: 24,
+                      child: Column(
+                        children: [
+                          FloatingActionButton(
+                            heroTag: 'zoom_in',
+                            mini: true,
+                            onPressed: _zoomIn,
+                            backgroundColor: AppColors.emeraldSurface,
+                            child: const Icon(Icons.add, color: AppColors.neon),
+                          ),
+                          const SizedBox(height: 8),
+                          FloatingActionButton(
+                            heroTag: 'zoom_out',
+                            mini: true,
+                            onPressed: _zoomOut,
+                            backgroundColor: AppColors.emeraldSurface,
+                            child: const Icon(Icons.remove, color: AppColors.neon),
+                          ),
+                          const SizedBox(height: 8),
+                          FloatingActionButton(
+                            heroTag: 'locate',
+                            mini: true,
+                            onPressed: _locate,
+                            backgroundColor: AppColors.emeraldSurface,
+                            child: const Icon(Icons.my_location, color: AppColors.neon),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
