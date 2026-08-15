@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../providers/weather_provider.dart';
@@ -24,6 +25,17 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
   void _zoomIn() => _mapController.move(_currentCenter, _currentZoom + 1);
   void _zoomOut() => _mapController.move(_currentCenter, _currentZoom - 1);
   void _locate() => _mapController.move(_currentCenter, 13);
+
+  Future<void> _openVideo(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Не удалось открыть ссылку')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +61,6 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
       ),
       body: Column(
         children: [
-          // Карта с кнопками навигации
           SizedBox(
             height: 220,
             child: Stack(
@@ -105,7 +116,6 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
               ],
             ),
           ),
-          // Остальной контент
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
@@ -117,7 +127,6 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
                   Text('Добро пожаловать, Райдер!', style: Theme.of(context).textTheme.headlineMedium),
                   const SizedBox(height: 24),
 
-                  // Погода
                   weatherAsync.when(
                     data: (weather) => Card(
                       color: AppColors.emeraldSurface,
@@ -139,7 +148,6 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Телеметрия
                   Text('Последняя телеметрия', style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 12),
                   telemetryAsync.when(
@@ -170,7 +178,6 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Мои видео
                   Text('Мои видео', style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 12),
                   mediaAsync.when(
@@ -184,12 +191,14 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
                       }
                       return Column(
                         children: clips.map((clip) {
+                          final url = clip['result_url'] ?? '';
                           return Card(
                             color: AppColors.emeraldSurface,
                             child: ListTile(
                               title: Text('Хайлайт ${clip['createdAt']}'),
-                              subtitle: Text(clip['result_url'] ?? ''),
+                              subtitle: Text(url),
                               trailing: const Icon(Icons.play_circle, color: AppColors.neon),
+                              onTap: () => _openVideo(url),
                             ),
                           );
                         }).toList(),
@@ -200,7 +209,6 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // SOS-кнопка
                   SizedBox(
                     width: double.infinity,
                     height: 56,
