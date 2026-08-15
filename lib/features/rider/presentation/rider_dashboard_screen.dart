@@ -6,10 +6,11 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/providers.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../providers/weather_provider.dart';
 import '../providers/telemetry_provider.dart';
 import '../providers/media_provider.dart';
-import '../../../core/widgets/empty_state.dart';
+import '../providers/live_telemetry_provider.dart';
 
 class RiderDashboardScreen extends ConsumerStatefulWidget {
   const RiderDashboardScreen({super.key});
@@ -45,6 +46,7 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
     const riderId = '4dad9c5c-f171-462b-8d4a-112eb3c49a83';
     final telemetryAsync = ref.watch(riderTelemetryProvider(riderId));
     final mediaAsync = ref.watch(mediaClipsProvider);
+    final liveTelemetry = ref.watch(liveTelemetryProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -128,6 +130,25 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
                   Text('Добро пожаловать, Райдер!', style: Theme.of(context).textTheme.headlineMedium),
                   const SizedBox(height: 24),
 
+                  // Live телеметрия
+                  if (liveTelemetry != null)
+                    Card(
+                      color: AppColors.emeraldSurface,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Live: ${liveTelemetry['metricName']}', style: Theme.of(context).textTheme.bodyLarge),
+                            Text('${liveTelemetry['metricValue']}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.neon)),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  const SizedBox(height: 16),
+
+                  // Погода
                   weatherAsync.when(
                     data: (weather) => Card(
                       color: AppColors.emeraldSurface,
@@ -149,6 +170,7 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
                   ),
                   const SizedBox(height: 24),
 
+                  // Последняя телеметрия из REST
                   Text('Последняя телеметрия', style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 12),
                   telemetryAsync.when(
@@ -179,6 +201,7 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
                   ),
                   const SizedBox(height: 24),
 
+                  // Мои видео
                   Text('Мои видео', style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 12),
                   mediaAsync.when(
@@ -210,6 +233,7 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
                   ),
                   const SizedBox(height: 24),
 
+                  // SOS-кнопка
                   SizedBox(
                     width: double.infinity,
                     height: 56,
