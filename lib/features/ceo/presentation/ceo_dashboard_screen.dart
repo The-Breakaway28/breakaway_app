@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -147,7 +148,7 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(name, style: Theme.of(context).textTheme.titleMedium),
-                                Icon(Icons.directions_car, color: AppColors.neon),
+                                const Icon(Icons.directions_car, color: AppColors.neon),
                               ],
                             ),
                             const SizedBox(height: 4),

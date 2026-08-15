@@ -86,7 +86,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Spacer(flex: 2),
-                  Text('🚴‍♂️', textAlign: TextAlign.center, style: TextStyle(fontSize: 48)),
+                  const Text('🚴‍♂️', textAlign: TextAlign.center, style: TextStyle(fontSize: 48)),
                   const SizedBox(height: 28),
                   Text(
                     'THE BREAKAWAY',
