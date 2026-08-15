@@ -1,4 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
@@ -22,7 +21,7 @@ class DriverDashboardScreen extends ConsumerWidget {
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await authService.logout();
-              Navigator.pushReplacementNamed(context, '/login');
+              if (context.mounted) Navigator.pushReplacementNamed(context, '/login');
             },
           ),
         ],
@@ -45,16 +44,16 @@ class DriverDashboardScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                   Text(name, style: Theme.of(context).textTheme.headlineMedium),
                   const SizedBox(height: 24),
-                  _buildProgressBar('⛽ Топливо', fuelLevel),
-                  _buildProgressBar('💧 Вода', waterLevel),
-                  _buildProgressBar('🔥 Пропан', propaneLevel),
-                  _buildProgressBar('🔋 Батарея', batteryCharge),
+                  _buildAnimatedProgressBar('⛽ Топливо', fuelLevel),
+                  _buildAnimatedProgressBar('💧 Вода', waterLevel),
+                  _buildAnimatedProgressBar('🔥 Пропан', propaneLevel),
+                  _buildAnimatedProgressBar('🔋 Батарея', batteryCharge),
                   const SizedBox(height: 32),
                   Center(
                     child: ElevatedButton(
                       onPressed: () async {
                         await authService.logout();
-                        Navigator.pushReplacementNamed(context, '/login');
+                        if (context.mounted) Navigator.pushReplacementNamed(context, '/login');
                       },
                       child: const Text('Выйти'),
                     ),
@@ -70,7 +69,7 @@ class DriverDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildProgressBar(String label, double value) {
+  Widget _buildAnimatedProgressBar(String label, double value) {
     Color color;
     if (value > 50) {
       color = AppColors.neon;
@@ -92,14 +91,21 @@ class DriverDashboardScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: value / 100,
-              backgroundColor: Colors.grey[800],
-              valueColor: AlwaysStoppedAnimation<Color>(color),
-              minHeight: 10,
-            ),
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0, end: value / 100),
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeOutCubic,
+            builder: (context, progress, child) {
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  backgroundColor: Colors.grey[800],
+                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                  minHeight: 10,
+                ),
+              );
+            },
           ),
         ],
       ),

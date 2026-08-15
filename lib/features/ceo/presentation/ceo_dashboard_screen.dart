@@ -1,4 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -67,7 +66,6 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
           }
           return Column(
             children: [
-              // Карта с кнопками
               Expanded(
                 child: Stack(
                   children: [
@@ -122,7 +120,6 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
                   ],
                 ),
               ),
-              // Список автодомов с прогресс-барами
               Expanded(
                 child: ListView.builder(
                   itemCount: vehicles.length,
@@ -154,10 +151,10 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
                             const SizedBox(height: 4),
                             Text('Тип: $type', style: Theme.of(context).textTheme.bodyMedium),
                             const SizedBox(height: 12),
-                            _buildProgressBar('⛽ Топливо', fuel),
-                            _buildProgressBar('💧 Вода', water),
-                            _buildProgressBar('🔥 Пропан', propane),
-                            _buildProgressBar('🔋 Батарея', battery),
+                            _buildAnimatedProgressBar('⛽ Топливо', fuel),
+                            _buildAnimatedProgressBar('💧 Вода', water),
+                            _buildAnimatedProgressBar('🔥 Пропан', propane),
+                            _buildAnimatedProgressBar('🔋 Батарея', battery),
                           ],
                         ),
                       ),
@@ -174,7 +171,7 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
     );
   }
 
-  Widget _buildProgressBar(String label, double value) {
+  Widget _buildAnimatedProgressBar(String label, double value) {
     Color color;
     if (value > 50) {
       color = AppColors.neon;
@@ -196,14 +193,21 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
             ],
           ),
           const SizedBox(height: 4),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: value / 100,
-              backgroundColor: Colors.grey[800],
-              valueColor: AlwaysStoppedAnimation<Color>(color),
-              minHeight: 10,
-            ),
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0, end: value / 100),
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeOutCubic,
+            builder: (context, progress, child) {
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  backgroundColor: Colors.grey[800],
+                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                  minHeight: 10,
+                ),
+              );
+            },
           ),
         ],
       ),
