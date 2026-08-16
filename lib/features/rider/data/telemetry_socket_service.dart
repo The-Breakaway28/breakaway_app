@@ -3,6 +3,9 @@ import 'package:socket_io_client/socket_io_client.dart' as io;
 
 class TelemetrySocketService {
   io.Socket? _socket;
+  final String token;
+
+  TelemetrySocketService(this.token);
 
   void connect() {
     if (_socket != null) return;
@@ -11,6 +14,7 @@ class TelemetrySocketService {
       'https://breakaway-api.duckdns.org',
       io.OptionBuilder()
           .setTransports(['websocket'])
+          .setAuth({'token': token})
           .disableAutoConnect()
           .build(),
     );
@@ -19,6 +23,10 @@ class TelemetrySocketService {
 
     _socket!.on('connect', (_) {
       print('Socket connected');
+    });
+
+    _socket!.on('connect_error', (err) {
+      print('Socket connect error: $err');
     });
 
     _socket!.on('disconnect', (_) {

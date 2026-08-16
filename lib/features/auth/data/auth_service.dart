@@ -4,6 +4,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class AuthService {
+  static String? currentToken;
+  static String? currentRole;
   static const String _baseUrl = 'https://breakaway-api.duckdns.org';
   static const String _tokenKey = 'auth_token';
   static const String _roleKey = 'user_role';
@@ -12,6 +14,8 @@ class AuthService {
   Future<void> _saveCredentials(String token, String role) async {
     await _storage.write(key: _tokenKey, value: token);
     await _storage.write(key: _roleKey, value: role);
+    currentToken = token;
+    currentRole = role;
   }
 
   Future<String?> getToken() async => await _storage.read(key: _tokenKey);
@@ -20,6 +24,8 @@ class AuthService {
   Future<void> logout() async {
     await _storage.delete(key: _tokenKey);
     await _storage.delete(key: _roleKey);
+    currentToken = null;
+    currentRole = null;
   }
 
   Future<Map<String, dynamic>> login(String email, String password) async {
