@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import '../../../core/providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../providers/all_vehicles_provider.dart';
+import '../providers/stages_provider.dart';
 
 class CEODashboardScreen extends ConsumerStatefulWidget {
   const CEODashboardScreen({super.key});
@@ -16,7 +17,7 @@ class CEODashboardScreen extends ConsumerStatefulWidget {
 class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
   bool _isRefreshing = false;
   final MapController _mapController = MapController();
-  LatLng _currentCenter = const LatLng(45.0, 6.0);
+  LatLng _currentCenter = const LatLng(45.05, 6.08);
   double _currentZoom = 11.0;
 
   Future<void> _refresh() async {
@@ -34,6 +35,7 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
   Widget build(BuildContext context) {
     final authService = ref.read(authServiceProvider);
     final vehiclesAsync = ref.watch(allVehiclesProvider);
+    final stagesAsync = ref.watch(stagesProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -64,6 +66,22 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
           if (vehicles.isEmpty) {
             return const Center(child: Text('Нет данных об автодомах'));
           }
+          final markers = <Marker>[];
+          for (final v in vehicles) {
+            final lat = (v['gpsLat'] as num?)?.toDouble();
+            final lng = (v['gpsLng'] as num?)?.toDouble();
+            if (lat != null && lng != null) {
+              markers.add(
+                Marker(
+                  point: LatLng(lat, lng),
+                  width: 40,
+                  height: 40,
+                  child: const Icon(Icons.directions_car, color: AppColors.neon, size: 32),
+                ),
+              );
+            }
+          }
+
           return Column(
             children: [
               Expanded(
@@ -84,6 +102,17 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
                           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                           userAgentPackageName: 'com.breakaway.app',
                         ),
+                        if (markers.isNotEmpty) MarkerLayer(markers: markers),
+                        if (stagesAsync.hasValue && stagesAsync.value!.isNotEmpty)
+                          PolylineLayer(
+                            polylines: [
+                              Polyline(
+                                points: _buildRoutePoints(stagesAsync.value!.first['routeGeoJSON']),
+                                strokeWidth: 4,
+                                color: AppColors.neon,
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                     Positioned(
@@ -169,6 +198,19 @@ class _CEODashboardScreenState extends ConsumerState<CEODashboardScreen> {
         error: (error, stack) => Center(child: Text('Ошибка загрузки: $error')),
       ),
     );
+  }
+
+  List<LatLng> _buildRoutePoints(dynamic geoJson) {
+    final points = <LatLng>[];
+    if (geoJson == null) return points;
+    final coords = geoJson['coordinates'] as List?;
+    if (coords == null) return points;
+    for (final coord in coords) {
+      if (coord is List && coord.length >= 2) {
+        points.add(LatLng(coord[1] as double, coord[0] as double));
+      }
+    }
+    return points;
   }
 
   Widget _buildAnimatedProgressBar(String label, double value) {
