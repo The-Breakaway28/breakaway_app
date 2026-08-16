@@ -1,7 +1,7 @@
 import 'dart:convert';
-import '../../../core/network/api_client.dart';
-import '../../../core/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers.dart';
+import '../../../core/network/api_client.dart';
 
 final chefServiceProvider = Provider<ChefService>((ref) {
   final authService = ref.read(authServiceProvider);
@@ -12,13 +12,27 @@ final chefServiceProvider = Provider<ChefService>((ref) {
 class ChefService {
   final ApiClient _apiClient;
   ChefService(this._apiClient);
+
   static const String _baseUrl = 'https://breakaway-api.duckdns.org';
 
   Future<List<dynamic>> getRidersStatus() async {
     final response = await _apiClient.get('$_baseUrl/chef/riders-status');
-    if (response.statusCode != 200) {
-      throw Exception('Failed to load riders status');
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as List<dynamic>;
+    } else {
+      throw Exception('Ошибка загрузки райдеров: ${response.statusCode}');
     }
-    return jsonDecode(response.body) as List<dynamic>;
+  }
+
+  Future<Map<String, dynamic>> generateMealPlan() async {
+    final response = await _apiClient.post(
+      '$_baseUrl/chef/meal-plan',
+      body: {'stageId': ''},
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception('Ошибка генерации меню: ${response.statusCode}');
+    }
   }
 }

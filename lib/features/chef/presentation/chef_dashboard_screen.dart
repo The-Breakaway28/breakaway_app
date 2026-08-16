@@ -1,15 +1,37 @@
-// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../providers/riders_status_provider.dart';
+import '../data/chef_service.dart';
 
-class ChefDashboardScreen extends ConsumerWidget {
+class ChefDashboardScreen extends ConsumerStatefulWidget {
   const ChefDashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ChefDashboardScreen> createState() => _ChefDashboardScreenState();
+}
+
+class _ChefDashboardScreenState extends ConsumerState<ChefDashboardScreen> {
+  Map<String, dynamic>? _mealPlan;
+
+  Future<void> _loadMealPlan() async {
+    final authService = ref.read(authServiceProvider);
+    final token = await authService.getToken();
+    if (token == null) return;
+    final service = ref.read(chefServiceProvider);
+    final result = await service.generateMealPlan();
+    setState(() => _mealPlan = result);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMealPlan();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authService = ref.read(authServiceProvider);
     final ridersAsync = ref.watch(ridersStatusProvider);
 
@@ -22,31 +44,27 @@ class ChefDashboardScreen extends ConsumerWidget {
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await authService.logout();
-              Navigator.pushReplacementNamed(context, '/login');
+              if (context.mounted) Navigator.pushReplacementNamed(context, '/login');
             },
           ),
         ],
       ),
-      body: Center(
-        child: ridersAsync.when(
-          data: (riders) {
-            if (riders.isEmpty) {
-              return const Text('Нет данных о райдерах');
-            }
-            return ListView.builder(
-              itemCount: riders.length,
-              padding: const EdgeInsets.all(16),
-              itemBuilder: (context, index) {
-                final rider = riders[index];
+      body: ridersAsync.when(
+        data: (riders) {
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Text('Райдеры', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              ...riders.map((rider) {
                 final name = rider['name'] ?? '—';
                 final allergies = (rider['allergies'] as List<dynamic>?)?.join(', ') ?? 'нет';
                 final status = rider['status'] ?? 'ok';
-
                 return Card(
                   color: AppColors.emeraldSurface,
-                  margin: const EdgeInsets.only(bottom: 12),
+                  margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
-                    title: Text(name, style: Theme.of(context).textTheme.titleMedium),
+                    title: Text(name),
                     subtitle: Text('Аллергии: $allergies'),
                     trailing: Icon(
                       status == 'critical' ? Icons.error : status == 'warning' ? Icons.warning : Icons.check_circle,
@@ -54,12 +72,51 @@ class ChefDashboardScreen extends ConsumerWidget {
                     ),
                   ),
                 );
-              },
-            );
-          },
-          loading: () => const CircularProgressIndicator(),
-          error: (error, stack) => Text('Ошибка загрузки: $error'),
-        ),
+              }),
+              const SizedBox(height: 24),
+              Text('Меню на день', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              if (_mealPlan == null)
+                const Center(child: CircularProgressIndicator())
+              else ...[
+                ...((_mealPlan!['meals'] as List<dynamic>?) ?? []).map((meal) {
+                  return Card(
+                    color: AppColors.emeraldSurface,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('${meal['meal']}: ${meal['name']}',
+                              style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: 4),
+                          Text('Рецепт: ${meal['recipe']}',
+                              style: Theme.of(context).textTheme.bodyMedium),
+                          const SizedBox(height: 4),
+                          Text('Ингредиенты: ${(meal['ingredients'] as List<dynamic>?)?.join(', ')}',
+                              style: const TextStyle(fontSize: 14)),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 24),
+                Text('Список покупок', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 8),
+                Card(
+                  color: AppColors.emeraldSurface,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text((_mealPlan!['shoppingList'] as List<dynamic>?)?.join(', ') ?? ''),
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Ошибка: $e')),
       ),
     );
   }
