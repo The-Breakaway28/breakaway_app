@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/login_screen.dart';
+import 'features/auth/presentation/register_screen.dart';
 import 'features/rider/presentation/rider_dashboard_screen.dart';
 import 'features/driver/presentation/driver_dashboard_screen.dart';
 import 'features/chef/presentation/chef_dashboard_screen.dart';
@@ -13,11 +14,12 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'The Breakaway',
-      debugShowCheckedModeBanner: false, // Убирает баннер DEBUG
+      debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
+        '/register': (context) => const RegisterScreen(),
         '/rider-dashboard': (context) => const RiderDashboardScreen(),
         '/driver-dashboard': (context) => const DriverDashboardScreen(),
         '/chef-dashboard': (context) => const ChefDashboardScreen(),

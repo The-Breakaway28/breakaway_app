@@ -1,3 +1,4 @@
+// ignore_for_file: prefer_const_constructors
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
@@ -41,8 +42,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         _passwordController.text,
       );
 
-      // После успешного входа определяем роль и переходим на нужный дашборд
       final role = await authService.getRole();
+      if (!mounted) return;
       String route;
       switch (role) {
         case 'driver':
@@ -57,8 +58,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         default:
           route = '/rider-dashboard';
       }
-
-      if (!mounted) return;
       Navigator.pushReplacementNamed(context, route);
     } on Exception catch (e) {
       if (!mounted) return;
@@ -86,7 +85,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Spacer(flex: 2),
-                  const Text('🚴‍♂️', textAlign: TextAlign.center, style: TextStyle(fontSize: 48)),
+                  Text('🚴‍♂️', textAlign: TextAlign.center, style: const TextStyle(fontSize: 48)),
                   const SizedBox(height: 28),
                   Text(
                     'THE BREAKAWAY',
@@ -162,7 +161,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 )
                               : const Text('ВОЙТИ'),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
+                        OutlinedButton(
+                          onPressed: _isSubmitting
+                              ? null
+                              : () => Navigator.pushNamed(context, '/register'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.neon,
+                            side: const BorderSide(color: AppColors.neon),
+                            minimumSize: const Size.fromHeight(48),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          child: const Text('СОЗДАТЬ АККАУНТ'),
+                        ),
+                        const SizedBox(height: 8),
                         Center(
                           child: TextButton(
                             onPressed: _isSubmitting ? null : () {},

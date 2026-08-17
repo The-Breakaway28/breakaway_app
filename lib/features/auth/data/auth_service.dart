@@ -28,6 +28,24 @@ class AuthService {
     currentRole = null;
   }
 
+  Future<Map<String, dynamic>> register(String name, String email, String password) async {
+    final uri = Uri.parse('$_baseUrl/auth/register');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'password': password, 'name': name}),
+    );
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final token = data['access_token'] as String;
+      final role = data['user']['role'] as String? ?? 'rider';
+      await _saveCredentials(token, role);
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Ошибка регистрации');
+    }
+  }
+
   Future<Map<String, dynamic>> login(String email, String password) async {
     final uri = Uri.parse('$_baseUrl/auth/login');
     try {
