@@ -30,6 +30,19 @@ class _ChefDashboardScreenState extends ConsumerState<ChefDashboardScreen> {
     _loadMealPlan();
   }
 
+  String _getMealIcon(String mealType) {
+    switch (mealType) {
+      case 'breakfast':
+        return '🍳';
+      case 'lunch':
+        return '🍝';
+      case 'dinner':
+        return '🍚';
+      default:
+        return '🍽️';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authService = ref.read(authServiceProvider);
@@ -80,6 +93,10 @@ class _ChefDashboardScreenState extends ConsumerState<ChefDashboardScreen> {
                 const Center(child: CircularProgressIndicator())
               else ...[
                 ...((_mealPlan!['meals'] as List<dynamic>?) ?? []).map((meal) {
+                  final mealType = meal['meal'] as String? ?? '';
+                  final name = meal['name'] ?? '—';
+                  final recipe = meal['recipe'] ?? '';
+                  final ingredients = (meal['ingredients'] as List<dynamic>?)?.join(', ') ?? '';
                   return Card(
                     color: AppColors.emeraldSurface,
                     margin: const EdgeInsets.only(bottom: 12),
@@ -88,13 +105,21 @@ class _ChefDashboardScreenState extends ConsumerState<ChefDashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('${meal['meal']}: ${meal['name']}',
-                              style: Theme.of(context).textTheme.titleMedium),
-                          const SizedBox(height: 4),
-                          Text('Рецепт: ${meal['recipe']}',
+                          Row(
+                            children: [
+                              Text(_getMealIcon(mealType), style: const TextStyle(fontSize: 24)),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(name,
+                                    style: Theme.of(context).textTheme.titleMedium),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text('Рецепт: $recipe',
                               style: Theme.of(context).textTheme.bodyMedium),
                           const SizedBox(height: 4),
-                          Text('Ингредиенты: ${(meal['ingredients'] as List<dynamic>?)?.join(', ')}',
+                          Text('Ингредиенты: $ingredients',
                               style: const TextStyle(fontSize: 14)),
                         ],
                       ),
